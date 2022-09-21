@@ -1,44 +1,72 @@
-import { hash } from "bcryptjs";
-import { getRepository, Repository } from "typeorm";
+import { hash } from 'bcryptjs';
+import { getRepository, Repository } from 'typeorm';
 
-import { ICreateUserDTO } from "../../dtos/ICreateUserDTO";
-import { User } from "../../entities/User";
-import { IUsersRepository } from "../IUsersRepository";
-
+import { ICreateUserDTO } from '../../dtos/ICreateUserDTO';
+import { User } from '../../entities/User';
+import { IUsersRepository } from '../IUsersRepository';
 
 class UserRepository implements IUsersRepository {
+  private repository: Repository<User>;
 
-    private repository: Repository<User>;
+  constructor() {
+    this.repository = getRepository(User);
+  }
 
-    constructor() {
-        this.repository = getRepository(User);
+  async create({
+    name,
+    email,
+    driver_license,
+    password,
+  }: ICreateUserDTO): Promise<void> {
+    const userAlreadyExists = await this.findByEmail(email);
+
+    if (userAlreadyExists) {
+      throw new Error('Email already exists!');
     }
 
-    async create({ name, email, driver_license, password }: ICreateUserDTO): Promise<void> {
+    const passwordHash = await hash(password, 8);
 
-        const userAlreadyExists = await this.findByEmail(email);
+    const user = this.repository.create({
+      name,
+      email,
+      driver_license,
+      password: passwordHash,
+    });
 
-        if (userAlreadyExists) {
-            throw new Error("Email already exists!");
-        }
+    await this.repository.save(user);
+  }
 
-        const passwordHash = await hash(password, 8);
+  async findByEmail(email: string): Promise<User> {
+    const user = await this.repository.findOne({ email });
 
-        const user = this.repository.create({
-            name,
-            email,
-            driver_license,
-            password: passwordHash,
-        });
+    return user;
+  }
 
-        await this.repository.save(user);
-    }
+  async findById(id: string): Promise<User> {
+    const user = await this.repository.findOne(id);
 
-    async findByEmail(email: string): Promise<User> {
-        const user = await this.repository.findOne({ email });
+    return user;
+  }
 
-        return user;
-    }
+  async updateAvatar({
+    name,
+    email,
+    driver_license,
+    password,
+    avatar,
+    id,
+  }: ICreateUserDTO): Promise<void> {
+    const user = this.repository.create({
+      name,
+      email,
+      driver_license,
+      password,
+      avatar,
+      id,
+    });
+
+    await this.repository.save(user);
+  }
 }
 
 export { UserRepository };
