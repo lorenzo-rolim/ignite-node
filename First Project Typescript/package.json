@@ -42,8 +42,9 @@
     "uuid": "^8.3.2"
   },
   "scripts": {
-    "dev": "ts-node-dev --poll --transpile-only --inspect --ignore-watch node_modules --respawn src/server.ts",
+    "dev": "ts-node-dev --poll --transpile-only --inspect --ignore-watch node_modules --respawn src/shared/infra/http/server.ts",
     "typeorm": "ts-node-dev ./node_modules/typeorm/cli",
-    "test": "jest"
+    "test": "jest --watchAll",
+    "seed": "ts-node-dev src/shared/infra/typeorm/seed/admin.ts"
   }
 }
